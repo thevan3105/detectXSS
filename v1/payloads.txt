@@ -5,3 +5,5 @@
 <ScRiPt>alert(1)</sCriPt>
 ‘; alert(1);
 ‘)alert(1);//
+<scr<script>ipt>alert('hello')</script>>
+<img src=x onError=alert('hello')>
