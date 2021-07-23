@@ -1,76 +1,39 @@
-
-import sys
-import warnings
-import argparse
-from selenium import webdriver                                       
-from selenium.webdriver.support.ui import WebDriverWait              
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-# import urllib2
-import urllib3
+import requests
 import urllib
-from logging import LOGGER
+import argparse
+# from logging import LOGGER
 from urllib.parse import urlparse
+from requests.exceptions import ConnectionError
 
-#print("hi")
-webUrl = urllib.request.urlopen('https://google.com')
-dataUrl = webUrl.read()
-
-#print('result: ' + str(webUrl.getcode()))
-#print(dataUrl)
-
-# browser = webdriver.Firefox()
-# browser.get("https://www.tutorialspoint.com/selenium/selenium_automation_practice.htm")
-# browser.find_element_by_id("submit").click()
-
-# try:
-#     WebDriverWait(browser, 3).until(EC.alert_is_present(), 'Timed out waiting for PA creation ' + 'confirmation popup to appear.')
-#     alert = browser.switch_to.alert
-#     alert.accept()
-#     print("alert accepted")
-# except TimeoutException:
-#     print("no alert")
-warnings.filterwarnings('ignore')
-
-options = webdriver.ChromeOptions()                                                               
-options.add_argument('--headless')                                                                
-options.add_argument('--disable-xss-auditor')                                                     
-options.add_argument('--disable-web-security')                                                    
-options.add_argument('--ignore-certificate-errors')                                              
-options.add_argument('--no-sandbox')                                                              
-options.add_argument('--log-level=3')                                                             
-options.add_argument('--disable-notifications')                                                   
-driver = webdriver.Chrome(executable_path="/usr/bin/chromedriver", chrome_options=options)        
-parser = argparse.ArgumentParser()                                                                
+parser = argparse.ArgumentParser()   
 parser.add_argument('-u', '--url', required=True)                                                 
 parser.add_argument('-w', '--wordlist', required=True)                                           
 args = parser.parse_args()
-url = input()
+target = args.url
+payload = args.wordlist
 
-def checkDOM_Reflected():                                                                    
-    if not '{fuzz}' in args.url:
-        sys.exit("Need {fuzz} parameter !")
-    else:
-        target = args.url
-    wordlist = args.wordlist
-    for payload in open(wordlist, "r").readlines():
-        url = target.replace('{fuzz}', payload)
-        driver.get(url)
-        try:
-            WebDriverWait(driver, 3).until(EC.alert_is_present())
-            alert = driver.switch_to_alert()
-            alert.accept()
-            print("XSS alert accepted ! with", payload)
-        except TimeoutException:
-            print("XSS doesn\'t work with", payload)
+# print(target)
+# print(payload)
 
-def checkStored():
-    return
+def checkDOM_Reflected(target, payload):
+    # target = input("Url: ")
+    # payload = "<script>alert("");</script>"
+    for check in open(payload, "r").readlines():
+        # url = target.replace('')
+        req = requests.post(target + check)
+        if check in req.text:
+            print("XSS detected")
+            print(check)
+        else:
+            print("Secure")
 
-def url_validator(url):
+def url_validator(target):
     try:
-        result = urlparse(url)
-        # return all([result.scheme, result.netloc])
-        checkDOM_Reflected()
-    except:
-        print("Url does not exist!")
+        request = requests.get(target)
+    except ConnectionError:
+        print('Web site khong ton tai')
+    else:
+        checkDOM_Reflected(target, payload)
+
+# url_validator(url, payload)
+url_validator(target)
